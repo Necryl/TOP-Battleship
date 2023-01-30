@@ -13,5 +13,56 @@
     <title>Battleship: TOP Project</title>
     <link rel="icon" href="<%=require('./assets/images/favicon.svg')%>" />
   </head>
-  <body></body>
+  <body>
+    <div id="arenaView">
+      <div id="topBar">
+        <button id="helpBtn">HELP</button>
+        <button id="newGameBtn">NEW GAME</button>
+      </div>
+      <div id="arena">
+        <div id="player">
+          <div class="statusContainer">
+            <span class="status" data-size="4" data-status="grey"></span>
+            <span class="status" data-size="3" data-status="grey"></span>
+            <span class="status" data-size="2" data-status="grey"></span>
+            <span class="status" data-size="1" data-status="grey"></span>
+          </div>
+          <div>
+            <h2 class="name">Player</h2>
+            <div class="board"></div>
+            <div id="controls">
+              <button id="randomizeBtn">Randomize</button>
+              <button id="resetBtn">Reset</button>
+            </div>
+          </div>
+        </div>
+        <div id="computer">
+          <div class="statusContainer">
+            <span class="status" data-size="4" data-status="grey"></span>
+            <span class="status" data-size="3" data-status="grey"></span>
+            <span class="status" data-size="2" data-status="grey"></span>
+            <span class="status" data-size="1" data-status="grey"></span>
+          </div>
+          <div>
+            <h2 class="name">Computer</h2>
+            <div class="board"></div>
+          </div>
+        </div>
+      </div>
+      <div id="bottomBar">
+        <button id="startBtn">START</button>
+      </div>
+    </div>
+    <div id="helpView" class="disappear">
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Animi vel
+      suscipit cupiditate laboriosam temporibus, nemo et velit, doloremque
+      voluptatibus iure dolor facilis quas eos. Minus dolores ipsam aut dolor
+      facilis.
+    </div>
+    <div id="endView" class="disappear">
+      <div id="endCard">
+        <h1 id="endMsg">You Win!</h1>
+      </div>
+    </div>
+  </body>
 </html>
