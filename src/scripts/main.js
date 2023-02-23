@@ -54,6 +54,18 @@ const Data = (() => {
       if (locs.length !== ship) {
         throw Error("number of cells to be filled doesn't match ship size");
       }
+      locs.forEach((loc) => {
+        if (cells[loc].ship !== null) {
+          throw Error("at least one of the given cells already host a ship");
+        }
+      });
+      // reseting any cells that currently host the ship
+      if (ships[ship - 1].cells.length !== 0) {
+        ships[ship - 1].cells.forEach((cell) => {
+          cells[cell].ship = null;
+        });
+      }
+
       const shipCells = [];
       [...locs].forEach((loc) => {
         cells[loc].ship = ship;
@@ -61,6 +73,9 @@ const Data = (() => {
       });
       ships[ship - 1].cells = shipCells;
     }
+
+    function placeAtRandom() {}
+
     function receiveAttack(loc) {
       loc.forEach((num) => {
         if (num < 0 || num > size - 1) {
@@ -83,7 +98,7 @@ const Data = (() => {
         return final;
       }, true);
     }
-    return { place, receiveAttack, defeated, ships, cells };
+    return { place, placeAtRandom, receiveAttack, defeated, ships, cells };
   }
 
   return { Ship, Gameboard, Cell };

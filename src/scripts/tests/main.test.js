@@ -58,6 +58,7 @@ describe("Gameboard factory", () => {
   });
   test("Gameboard should have these methods", () => {
     expect(board.place).toBeDefined();
+    expect(board.placeAtRandom).toBeDefined();
     expect(board.receiveAttack).toBeDefined();
     expect(board.defeated).toBeDefined();
     expect(Array.isArray(board.ships)).toBe(true);
@@ -82,18 +83,30 @@ describe("Gameboard factory", () => {
     expect(board.cells[[0, 0]].ship).toBe(1);
     expect(board.ships[0].cells).toStrictEqual([[0, 0]]);
     expect(() => board.place(1, [1, 0], [1, 1], [1, 2])).toThrow(); // number of cells is too big for the ship size
-    expect(() => board.place(3, [0, 0], [0, 1], [0, 2])).not.toThrow(); // number of cells is fits the ship size
+    expect(() => board.place(3, [5, 0], [5, 1], [5, 2])).not.toThrow(); // number of cells is fits the ship size
     board.place(1, [1, 0]);
+    expect(board.cells[[0, 0]].ship).toBe(null);
+    expect(board.cells[[1, 0]].ship).toBe(1);
     expect(board.ships[0].cells).toStrictEqual([[1, 0]]);
+    expect(() => {
+      board.place(2, [1, 0], [1, 1]);
+    }).toThrow("at least one of the given cells already host a ship");
   });
+  test("placeAtRandom method", () => {});
   test("receiveAttack method", () => {
+    board.place(1, [0, 0]);
+    board.place(2, [1, 0], [1, 1]);
+    board.place(3, [2, 0], [2, 1], [2, 2]);
+    board.place(4, [3, 0], [3, 1], [3, 2], [3, 3]);
+
     expect(board.cells[[0, 0]].shot).toBe(false);
     let response = board.receiveAttack([0, 0]);
     expect(response).toBe(true);
+    expect(board.ships[0].isSunk()).toBe(true);
     expect(board.cells[[0, 0]].shot).toBe(true);
-    response = board.receiveAttack([3, 0]);
+    response = board.receiveAttack([4, 0]);
     expect(response).toBe(false);
-    expect(board.cells[[3, 0]].shot).toBe(true);
+    expect(board.cells[[4, 0]].shot).toBe(true);
     expect(() => {
       board.receiveAttack([-1, 0]);
     }).toThrow("Given cell location is invalid");
@@ -103,10 +116,6 @@ describe("Gameboard factory", () => {
     expect(() => {
       board.receiveAttack([0, 9]);
     }).not.toThrow();
-    // ship 1's only cell is [1, 0]
-    expect(board.ships[0].isSunk()).toBe(false);
-    expect(board.receiveAttack([1, 0])).toBe(true);
-    expect(board.ships[0].isSunk()).toBe(true);
   });
 
   test("defeated method", () => {
