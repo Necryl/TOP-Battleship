@@ -103,9 +103,36 @@ describe("Gameboard factory", () => {
     expect(() => {
       board.receiveAttack([0, 9]);
     }).not.toThrow();
-    // ship 1 is [1,0]
+    // ship 1's only cell is [1, 0]
     expect(board.ships[0].isSunk()).toBe(false);
     expect(board.receiveAttack([1, 0])).toBe(true);
     expect(board.ships[0].isSunk()).toBe(true);
+  });
+
+  test("defeated method", () => {
+    const newBoard = Gameboard();
+    newBoard.place(1, [1, 0]);
+    newBoard.place(2, [2, 0], [2, 1]);
+    newBoard.place(3, [3, 0], [3, 1], [3, 2]);
+    newBoard.place(4, [4, 0], [4, 1], [4, 2], [4, 3]);
+
+    expect(newBoard.defeated()).toBe(false);
+
+    // sinking all the ships except the first one
+    const shipsExceptOne = newBoard.ships.slice(1);
+    shipsExceptOne.forEach((ship) => {
+      ship.cells.forEach((loc) => {
+        newBoard.receiveAttack(loc);
+      });
+      expect(ship.isSunk()).toBe(true);
+    });
+
+    expect(newBoard.defeated()).toBe(false);
+
+    // sinking the last ship
+    newBoard.receiveAttack([1, 0]);
+    expect(newBoard.ships[0].isSunk()).toBe(true);
+
+    expect(newBoard.defeated()).toBe(true);
   });
 });

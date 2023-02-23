@@ -74,7 +74,14 @@ function Gameboard(size = 10) {
     }
     return false;
   }
-  function defeated() {}
+  function defeated() {
+    return ships.reduce((final, current) => {
+      if (current.isSunk() === false) {
+        final = false;
+      }
+      return final;
+    }, true);
+  }
   return { place, receiveAttack, defeated, ships, cells };
 }
 
