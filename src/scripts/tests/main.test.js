@@ -86,4 +86,26 @@ describe("Gameboard factory", () => {
     board.place(1, [1, 0]);
     expect(board.ships[0].cells).toStrictEqual([[1, 0]]);
   });
+  test("receiveAttack method", () => {
+    expect(board.cells[[0, 0]].shot).toBe(false);
+    let response = board.receiveAttack([0, 0]);
+    expect(response).toBe(true);
+    expect(board.cells[[0, 0]].shot).toBe(true);
+    response = board.receiveAttack([3, 0]);
+    expect(response).toBe(false);
+    expect(board.cells[[3, 0]].shot).toBe(true);
+    expect(() => {
+      board.receiveAttack([-1, 0]);
+    }).toThrow("Given cell location is invalid");
+    expect(() => {
+      board.receiveAttack([0, 10]);
+    }).toThrow("Given cell location is invalid");
+    expect(() => {
+      board.receiveAttack([0, 9]);
+    }).not.toThrow();
+    // ship 1 is [1,0]
+    expect(board.ships[0].isSunk()).toBe(false);
+    expect(board.receiveAttack([1, 0])).toBe(true);
+    expect(board.ships[0].isSunk()).toBe(true);
+  });
 });

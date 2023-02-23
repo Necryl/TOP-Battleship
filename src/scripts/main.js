@@ -60,7 +60,20 @@ function Gameboard(size = 10) {
     });
     ships[ship - 1].cells = shipCells;
   }
-  function receiveAttack() {}
+  function receiveAttack(loc) {
+    loc.forEach((num) => {
+      if (num < 0 || num > size - 1) {
+        throw Error("Given cell location is invalid");
+      }
+    });
+    const cell = cells[loc];
+    cell.shot = true;
+    if (cell.ship !== null) {
+      ships[cell.ship - 1].hit();
+      return true;
+    }
+    return false;
+  }
   function defeated() {}
   return { place, receiveAttack, defeated, ships, cells };
 }
