@@ -8,6 +8,9 @@ describe("Ship factory", () => {
   test("ship4 length", () => {
     expect(ship4.length).toBe(4);
   });
+  test("ship4 cells property", () => {
+    expect(Array.isArray(ship4.cells)).toBe(true);
+  });
   test("ship4.hit() and isSunk()", () => {
     for (let i = 0; i < 4; i++) {
       expect(ship4.isSunk()).toBe(false);
@@ -66,5 +69,21 @@ describe("Gameboard factory", () => {
         expect(board.cells[[x, y]]).toBeDefined();
       }
     }
+  });
+  test("ships property contains the ships", () => {
+    expect(board.ships.length).not.toBe(0);
+    board.ships.forEach((ship) => {
+      expect(ship.isSunk).toBeDefined();
+    });
+  });
+  test("place method", () => {
+    board.place(1, [0, 0]);
+    expect(board.cells[[0, 0]].ship).not.toBe(null);
+    expect(board.cells[[0, 0]].ship).toBe(1);
+    expect(board.ships[0].cells).toStrictEqual([[0, 0]]);
+    expect(() => board.place(1, [1, 0], [1, 1], [1, 2])).toThrow(); // number of cells is too big for the ship size
+    expect(() => board.place(3, [0, 0], [0, 1], [0, 2])).not.toThrow(); // number of cells is fits the ship size
+    board.place(1, [1, 0]);
+    expect(board.ships[0].cells).toStrictEqual([[1, 0]]);
   });
 });

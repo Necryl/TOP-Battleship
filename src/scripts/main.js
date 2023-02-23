@@ -8,6 +8,7 @@ function Ship(length) {
   }
 
   let hitCount = 0;
+  const cells = [];
 
   function hit() {
     if (hitCount < length) {
@@ -25,6 +26,7 @@ function Ship(length) {
     length,
     hit,
     isSunk,
+    cells,
   };
 }
 
@@ -44,7 +46,20 @@ function Gameboard(size = 10) {
       cells[[x, y]] = Cell([x, y]);
     }
   }
-  function place() {}
+  for (let i = 1; i <= 4; i++) {
+    ships.push(Ship(i));
+  }
+  function place(ship, ...locs) {
+    if (locs.length !== ship) {
+      throw Error("number of cells to be filled doesn't match ship size");
+    }
+    const shipCells = [];
+    [...locs].forEach((loc) => {
+      cells[loc].ship = ship;
+      shipCells.push(loc);
+    });
+    ships[ship - 1].cells = shipCells;
+  }
   function receiveAttack() {}
   function defeated() {}
   return { place, receiveAttack, defeated, ships, cells };
