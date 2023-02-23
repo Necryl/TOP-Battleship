@@ -91,6 +91,15 @@ describe("Gameboard factory", () => {
     expect(() => {
       board.place(2, [1, 0], [1, 1]);
     }).toThrow("at least one of the given cells already host a ship");
+    expect(() => {
+      board.place(2, [1, -1], [1, 1]);
+    }).toThrow("at least one of the given cells is invalid");
+    expect(() => {
+      board.place(2, [9, 1], [10, 1]);
+    }).toThrow("at least one of the given cells is invalid");
+    expect(() => {
+      board.place(2, [9, 0], [7, 1]);
+    }).toThrow("the given cells are not adjacent");
   });
   test("placeAtRandom method", () => {});
   test("receiveAttack method", () => {

@@ -55,10 +55,36 @@ const Data = (() => {
         throw Error("number of cells to be filled doesn't match ship size");
       }
       locs.forEach((loc) => {
+        loc.forEach((num) => {
+          if (num < 0 || num > size - 1) {
+            throw Error("at least one of the given cells is invalid");
+          }
+        });
         if (cells[loc].ship !== null) {
           throw Error("at least one of the given cells already host a ship");
         }
       });
+      // checking that the cells are adjacent
+      const xCoords = [];
+      const yCoords = [];
+      locs.forEach((loc) => {
+        xCoords.push(loc[0]);
+        yCoords.push(loc[1]);
+      });
+      const isSimilar = (nums) => {
+        let result = true;
+        for (let i = 1; i < nums.length; i++) {
+          if (nums[i - 1] !== nums[i]) {
+            result = false;
+            break;
+          }
+        }
+        return result;
+      };
+      if (!isSimilar(xCoords) && !isSimilar(yCoords)) {
+        throw Error("the given cells are not adjacent");
+      }
+
       // reseting any cells that currently host the ship
       if (ships[ship - 1].cells.length !== 0) {
         ships[ship - 1].cells.forEach((cell) => {
