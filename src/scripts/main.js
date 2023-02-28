@@ -109,23 +109,23 @@ const Data = (() => {
       });
       ships[ship - 1].cells = shipCells;
     }
+    function getAdjacentCell(cell, dir) {
+      switch (dir) {
+        case "up":
+          return [cell[0] + 1, cell[1]];
+        case "down":
+          return [cell[0] - 1, cell[1]];
+        case "right":
+          return [cell[0], cell[1] + 1];
+        case "left":
+          return [cell[0], cell[1] - 1];
+        default:
+          throw Error(`Invalid value for parameter dir (direction): ${dir}`);
+      }
+    }
     function placeAtRandom() {
       initiate();
       const cellLocs = Object.keys(cells);
-      const getAdjacentCell = (cell, dir) => {
-        switch (dir) {
-          case "up":
-            return [cell[0] + 1, cell[1]];
-          case "down":
-            return [cell[0] - 1, cell[1]];
-          case "right":
-            return [cell[0], cell[1] + 1];
-          case "left":
-            return [cell[0], cell[1] - 1];
-          default:
-            throw Error(`Invalid value for parameter dir (direction): ${dir}`);
-        }
-      };
       const randomCellLoc = () => {
         let cell;
         // eslint-disable-next-line no-constant-condition
@@ -200,6 +200,7 @@ const Data = (() => {
       place,
       placeAtRandom,
       receiveAttack,
+      getAdjacentCell,
       defeated,
       ships,
       cells,
@@ -209,19 +210,76 @@ const Data = (() => {
   const board = Gameboard(10);
 
   const AI = (() => {
-    let realBoard = [];
-    let availableCells;
+    const realBoard = [];
+    const unexploredCells = [];
+    const visibleCells = [];
     function assign(givenBoard) {
       realBoard[0] = givenBoard;
     }
-    function play() {}
+    function currentBoard() {}
+    function look(cell) {
+      if (visibleCells.includes(JSON.stringify(cell))) {
+        return currentBoard()[cell];
+      }
+      return false;
+    }
+
+    const exposed = (() => {
+      const cells = []; // has to be sorted (up to down) or (left to right)
+      const dir = [null];
+      function direction() {
+        return dir[0];
+      }
+      function isSunk() {
+        if (direction() === null) {
+          return false;
+        }
+        const directions =
+          direction() === "vertical" ? ["up", "down"] : ["left", "right"];
+        const cellHead = look(
+          currentBoard().getAdjacentCell(cells[0]),
+          directions[0]
+        );
+        const cellEnd = look(
+          currentBoard().getAdjacentCell(cells[cells.length - 1], directions[1])
+        );
+        if (cellHead === false || cellEnd === false) {
+          return false;
+        }
+        return true;
+      }
+      function initiate(exposedCells = []) {
+        cells.splice(0, Infinity);
+        exposedCells.forEach((cell) => {
+          cells.push(cell);
+        });
+
+        dir[0] = null;
+      }
+      return {
+        cells,
+        direction,
+        isSunk,
+        initiate,
+      };
+    })();
     return {
       assign,
-      play,
+      currentBoard,
+      look,
+      exposed,
+      unexploredCells,
+      visibleCells,
     };
   })();
 
-  return { Ship, Gameboard, Cell, board, AI };
+  const Player = (() => {
+    const visibleCells = [];
+
+    return { visibleCells };
+  })();
+
+  return { Ship, Gameboard, Cell, board, AI, Player };
 })();
 
 const Engine = (() => {
@@ -230,8 +288,13 @@ const Engine = (() => {
     function play() {}
     return { play };
   })();
+  const Player = (() => {
+    return {};
+  })();
   return {
     AI,
+    Engine,
+    Player,
   };
 })();
 
