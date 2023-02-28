@@ -1,6 +1,6 @@
-import { Ship, Gameboard, Cell } from "../main";
+import { Data, UI, Engine } from "../main";
 
-describe("Ship factory", () => {
+describe("Ship factory", (Ship = Data.Ship) => {
   const ship4 = Ship(4);
   test("ship factory returns an object", () => {
     expect(typeof ship4).toBe("object");
@@ -39,7 +39,7 @@ describe("Ship factory", () => {
   });
 });
 
-describe("Cell factory", () => {
+describe("Cell factory", (Cell = Data.Cell) => {
   const cell00 = Cell([0, 0]);
   test("cell properties", () => {
     expect(cell00.ship).toBeDefined();
@@ -51,7 +51,7 @@ describe("Cell factory", () => {
   });
 });
 
-describe("Gameboard factory", () => {
+describe("Gameboard factory", (Gameboard = Data.Gameboard) => {
   const board = Gameboard();
   test("gameboard returns an object", () => {
     expect(typeof board).toBe("object");
@@ -162,5 +162,22 @@ describe("Gameboard factory", () => {
     expect(newBoard.ships[0].isSunk()).toBe(true);
 
     expect(newBoard.defeated()).toBe(true);
+  });
+});
+
+describe("AI", (AI = Data.AI) => {
+  const board = Data.Gameboard();
+  test("affirm existence of methods and properties", () => {
+    expect(AI.assign).toBeDefined();
+    expect(AI.exposed).toBeDefined();
+    expect(AI.unexploredCells).toBeDefined();
+    expect(AI.visbileCells).toBeDefined();
+    expect(AI.currentBoard).toBeDefined();
+  });
+  test("exposed property", () => {
+    expect(Array.isArray(AI.exposed.cells)).toBe(true);
+    expect(AI.exposed.direction).toBeDefined();
+    expect(AI.exposed.isSunk).toBeDefined();
+    expect(AI.exposed.initiate).toBeDefined();
   });
 });

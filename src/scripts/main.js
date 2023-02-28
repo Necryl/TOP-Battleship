@@ -2,6 +2,10 @@
 import mainStyles from "./../styles/main.css";
 /* eslint-enable no-unused-vars */
 
+const UI = (() => {
+  return {};
+})();
+
 const Data = (() => {
   function Ship(length) {
     if (!(length < 5 && length > 0)) {
@@ -176,9 +180,9 @@ const Data = (() => {
       cell.shot = true;
       if (cell.ship !== null) {
         ships[cell.ship - 1].hit();
-        return true;
+        return true; // hit a ship!
       }
-      return false;
+      return false; // missed!
     }
     function defeated() {
       return ships.reduce((final, current) => {
@@ -202,7 +206,33 @@ const Data = (() => {
     };
   }
 
-  return { Ship, Gameboard, Cell };
+  const board = Gameboard(10);
+
+  const AI = (() => {
+    let realBoard = [];
+    let availableCells;
+    function assign(givenBoard) {
+      realBoard[0] = givenBoard;
+    }
+    function play() {}
+    return {
+      assign,
+      play,
+    };
+  })();
+
+  return { Ship, Gameboard, Cell, board, AI };
 })();
 
-module.exports = { ...Data };
+const Engine = (() => {
+  const AI = (() => {
+    const data = Data.AI;
+    function play() {}
+    return { play };
+  })();
+  return {
+    AI,
+  };
+})();
+
+module.exports = { Data, UI, Engine };
