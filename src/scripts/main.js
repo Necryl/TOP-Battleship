@@ -42,13 +42,20 @@ const Data = (() => {
   function Gameboard(size = 10) {
     const ships = [];
     const cells = {};
-    for (let x = 0; x < size; x++) {
-      for (let y = 0; y < size; y++) {
-        cells[[x, y]] = Cell([x, y]);
+
+    function initiate() {
+      ships.splice(0, Infinity);
+      Object.keys(cells).forEach((cell) => {
+        delete cells[cell];
+      });
+      for (let x = 0; x < size; x++) {
+        for (let y = 0; y < size; y++) {
+          cells[[x, y]] = Cell([x, y]);
+        }
       }
-    }
-    for (let i = 1; i <= 4; i++) {
-      ships.push(Ship(i));
+      for (let i = 1; i <= 4; i++) {
+        ships.push(Ship(i));
+      }
     }
     function place(ship, ...locs) {
       if (locs.length !== ship) {
@@ -91,7 +98,6 @@ const Data = (() => {
           cells[cell].ship = null;
         });
       }
-
       const shipCells = [];
       [...locs].forEach((loc) => {
         cells[loc].ship = ship;
@@ -99,9 +105,67 @@ const Data = (() => {
       });
       ships[ship - 1].cells = shipCells;
     }
-
-    function placeAtRandom() {}
-
+    function placeAtRandom() {
+      initiate();
+      const cellLocs = Object.keys(cells);
+      const getAdjacentCell = (cell, dir) => {
+        switch (dir) {
+          case "up":
+            return [cell[0] + 1, cell[1]];
+          case "down":
+            return [cell[0] - 1, cell[1]];
+          case "right":
+            return [cell[0], cell[1] + 1];
+          case "left":
+            return [cell[0], cell[1] - 1];
+          default:
+            throw Error(`Invalid value for parameter dir (direction): ${dir}`);
+        }
+      };
+      const randomCellLoc = () => {
+        let cell;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const randomIndex = Math.floor(Math.random() * cellLocs.length);
+          cell = JSON.parse(`[${cellLocs[randomIndex]}]`);
+          if (cells[cell].ship === null) {
+            break;
+          } else {
+            cellLocs.splice(randomIndex, 1);
+          }
+        }
+        return cell;
+      };
+      const findCells = (shipNum) => {
+        let shipCells = [randomCellLoc()];
+        let dirs = ["up", "down", "right", "left"];
+        let dir = Math.floor(Math.random() * dirs.length);
+        while (shipCells.length !== shipNum) {
+          const newCell = getAdjacentCell(
+            shipCells[shipCells.length - 1],
+            dirs[dir]
+          );
+          if (
+            typeof cells[newCell] !== "undefined" &&
+            cells[newCell].ship === null
+          ) {
+            shipCells.push(newCell);
+          } else {
+            shipCells = shipCells.slice(0, 1);
+            dirs.splice(dir, 1);
+            if (dirs.length === 0) {
+              dirs = ["up", "down", "right", "left"];
+              shipCells = [randomCellLoc()];
+            }
+            dir = Math.floor(Math.random() * dirs.length);
+          }
+        }
+        return shipCells;
+      };
+      ships.forEach((ship) => {
+        place(ship.length, ...findCells(ship.length));
+      });
+    }
     function receiveAttack(loc) {
       loc.forEach((num) => {
         if (num < 0 || num > size - 1) {
@@ -124,7 +188,18 @@ const Data = (() => {
         return final;
       }, true);
     }
-    return { place, placeAtRandom, receiveAttack, defeated, ships, cells };
+
+    initiate();
+
+    return {
+      initiate,
+      place,
+      placeAtRandom,
+      receiveAttack,
+      defeated,
+      ships,
+      cells,
+    };
   }
 
   return { Ship, Gameboard, Cell };

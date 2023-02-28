@@ -101,7 +101,18 @@ describe("Gameboard factory", () => {
       board.place(2, [9, 0], [7, 1]);
     }).toThrow("the given cells are not adjacent");
   });
-  test("placeAtRandom method", () => {});
+  test("placeAtRandom method", () => {
+    const board1 = Gameboard();
+    board1.place(1, [0, 1]);
+    for (let i = 0; i < 1; i++) {
+      expect(() => {
+        board1.placeAtRandom();
+      }).not.toThrow();
+      board1.ships.forEach((ship) => {
+        expect(ship.cells.length).toBe(ship.length);
+      });
+    }
+  });
   test("receiveAttack method", () => {
     board.place(1, [0, 0]);
     board.place(2, [1, 0], [1, 1]);
@@ -126,7 +137,6 @@ describe("Gameboard factory", () => {
       board.receiveAttack([0, 9]);
     }).not.toThrow();
   });
-
   test("defeated method", () => {
     const newBoard = Gameboard();
     newBoard.place(1, [1, 0]);
