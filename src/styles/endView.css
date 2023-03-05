@@ -1,0 +1,24 @@
+#endView {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  display: grid;
+  place-content: center;
+}
+
+#endCard {
+  border: 0.1em solid black;
+  border-radius: 1em;
+  background-color: white;
+  padding: 1em;
+  min-height: 20vh;
+  min-width: 50vw;
+  display: grid;
+  place-content: center;
+
+  font-size: 3rem;
+}
+
+#endMsg {
+  font-size: inherit;
+}
