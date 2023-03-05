@@ -1,5 +1,8 @@
 /* eslint-disable no-unused-vars */
 import mainStyles from "./../styles/main.css";
+import arenaViewStyles from "./../styles/arenaView.css";
+import helpViewStyles from "./../styles/helpView.css";
+import endViewStyles from "./../styles/endView.css";
 /* eslint-enable no-unused-vars */
 
 const UI = (() => {
@@ -289,7 +292,8 @@ const Engine = (() => {
     return { play };
   })();
   const Player = (() => {
-    return {};
+    function play() {}
+    return { play };
   })();
   return {
     AI,
