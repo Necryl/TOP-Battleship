@@ -5,10 +5,6 @@ import helpViewStyles from "./../styles/helpView.css";
 import endViewStyles from "./../styles/endView.css";
 /* eslint-enable no-unused-vars */
 
-const UI = (() => {
-  return {};
-})();
-
 const Data = (() => {
   function Ship(length) {
     if (!(length < 5 && length > 0)) {
@@ -210,15 +206,11 @@ const Data = (() => {
     };
   }
 
-  const board = Gameboard(10);
-
   const AI = (() => {
     const realBoard = [];
     const unexploredCells = [];
     const visibleCells = [];
-    function assign(givenBoard) {
-      realBoard[0] = givenBoard;
-    }
+    const board = Gameboard(10);
     function currentBoard() {}
     function look(cell) {
       if (visibleCells.includes(JSON.stringify(cell))) {
@@ -267,7 +259,7 @@ const Data = (() => {
       };
     })();
     return {
-      assign,
+      board,
       currentBoard,
       look,
       exposed,
@@ -278,11 +270,37 @@ const Data = (() => {
 
   const Player = (() => {
     const visibleCells = [];
+    const board = Gameboard(10);
 
-    return { visibleCells };
+    return { visibleCells, board };
   })();
 
-  return { Ship, Gameboard, Cell, board, AI, Player };
+  return { Ship, Gameboard, Cell, AI, Player };
+})();
+
+const UI = (() => {
+  const elem = {
+    board: {
+      player: document.querySelector("#arenaView #player .board"),
+      computer: document.querySelector("#arenaView #computer .board"),
+    },
+  };
+
+  function generateBoard(boardElem, boardData) {
+    Object.keys(boardData.cells).forEach((cell) => {
+      const element = document.createElement("div");
+      element.classList.add("cell");
+      element.setAttribute("data-loc", cell);
+      boardElem.appendChild(element);
+    });
+  }
+
+  function initialise() {
+    generateBoard(elem.board.player, Data.Player.board);
+    generateBoard(elem.board.computer, Data.AI.board);
+  }
+
+  return { elem, initialise };
 })();
 
 const Engine = (() => {
@@ -291,15 +309,23 @@ const Engine = (() => {
     function play() {}
     return { play };
   })();
+
   const Player = (() => {
     function play() {}
     return { play };
   })();
+
+  function initialise() {
+    UI.initialise();
+  }
+
   return {
     AI,
-    Engine,
     Player,
+    initialise,
   };
 })();
+
+Engine.initialise();
 
 module.exports = { Data, UI, Engine };

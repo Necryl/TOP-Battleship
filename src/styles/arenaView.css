@@ -29,16 +29,17 @@
 #arena > div {
   display: grid;
   gap: 1rem;
+  grid-template-columns: auto auto;
 }
 
 #player {
-  grid-template-columns: auto 1fr;
-  justify-content: start;
-
   /* background-color: aqua; */
 }
+#player > div:not(.statusContainer) {
+  justify-self: end;
+}
 
-#player .controls {
+.controls {
   display: grid;
   grid-template-columns: auto auto;
   place-content: center;
@@ -50,9 +51,6 @@
 }
 
 #computer {
-  grid-template-columns: 1fr auto;
-  justify-content: end;
-
   /* background-color: red; */
 }
 
@@ -83,7 +81,7 @@
 }
 #arena > div > div:not(.statusContainer) {
   display: grid;
-  /* grid-template-rows: auto 1fr auto; */
+  width: 100%;
 }
 
 #arena div:not(.statusContainer) .name {
@@ -94,7 +92,23 @@
 #arena div:not(.statusContainer) .board {
   border: 0.15rem solid black;
   position: relative;
+  display: grid;
+  place-self: center;
+  width: 100%;
+  max-width: 50vh;
+  min-width: 14rem;
+
   grid-template-columns: repeat(10, 10%);
+}
+
+#arena div:not(.statusContainer) .board > .cell {
+  padding-bottom: 100%;
+  border: 0.1rem solid rgba(128, 128, 128, 0.342);
+  background-color: var(--status);
+}
+
+#arena div:not(.statusContainer) .board > .cell:hover {
+  outline: 0.15rem solid rgb(53, 41, 124);
 }
 
 #bottomBar {
@@ -107,21 +121,105 @@
   font-size: 1.75rem;
 }
 
-[data-size="4"] {
+.status[data-size="4"] {
   --size: 4;
 }
-[data-size="3"] {
+.status[data-size="3"] {
   --size: 3;
 }
-[data-size="2"] {
+.status[data-size="2"] {
   --size: 2;
 }
-[data-size="1"] {
+.status[data-size="1"] {
   --size: 1;
 }
-[data-status="grey"] {
+.status[data-status="grey"] {
   --status: grey;
 }
-[data-status="red"] {
+.status[data-status="red"] {
   --status: red;
+}
+
+.cell[data-status="mist"] {
+  --status: rgb(94, 122, 141);
+}
+.cell[data-status="water"] {
+  --status: rgb(20, 95, 145);
+}
+.cell[data-status="hit"] {
+  --status: rgb(37, 34, 39);
+}
+.cell[data-status="sunk"] {
+  --status: rgb(145, 42, 42);
+}
+
+@media (max-aspect-ratio: 65/96) {
+  #arena {
+    grid-template-columns: auto;
+  }
+  #arena > div {
+    grid-template-columns: auto 1fr;
+  }
+  #arena > div > div {
+    gap: 0.3rem;
+  }
+  #arena div:not(.statusContainer) .board {
+    max-width: 40vh;
+  }
+  #computer > div:not(.statusContainer) {
+    grid-area: B;
+  }
+  #arena #computer .statusContainer {
+    grid-area: S;
+    justify-items: start;
+  }
+  #computer {
+    grid-template-areas: "S B";
+  }
+  #computer .controls {
+    display: none;
+  }
+}
+
+@media (min-aspect-ratio: 916/410) {
+  #arenaView {
+    position: relative;
+    /* background-color: aqua; */
+  }
+  #topBar {
+    position: fixed;
+    top: 0.3rem;
+    left: 0.3rem;
+    grid-template-columns: auto;
+    background-color: white;
+  }
+  #topBar button {
+    scale: 0%;
+    background-color: white;
+  }
+  #helpBtn,
+  #newGameBtn {
+    position: absolute;
+  }
+  #helpBtn {
+    top: 100%;
+  }
+  #newGameBtn {
+    top: 300%;
+    width: max-content;
+  }
+  #topBar::before {
+    content: "MENU ^";
+  }
+  #topBar:hover::before {
+    content: "MENU v";
+  }
+  #topBar:hover button {
+    scale: 100%;
+  }
+  #bottomBar {
+    position: fixed;
+    bottom: 0%;
+    right: 0%;
+  }
 }

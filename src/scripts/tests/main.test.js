@@ -1,4 +1,8 @@
-import { Data, UI, Engine } from "../main";
+/**
+ * @jest-environment jsdom
+ */
+
+import { Data } from "../main";
 
 describe("Ship factory", (Ship = Data.Ship) => {
   const ship4 = Ship(4);
@@ -168,7 +172,6 @@ describe("Gameboard factory", (Gameboard = Data.Gameboard) => {
 describe("Data -> AI", (AI = Data.AI) => {
   const board = Data.Gameboard();
   test("affirm existence of methods and properties", () => {
-    expect(AI.assign).toBeDefined();
     expect(AI.exposed).toBeDefined();
     expect(AI.unexploredCells).toBeDefined();
     expect(AI.visibleCells).toBeDefined();
