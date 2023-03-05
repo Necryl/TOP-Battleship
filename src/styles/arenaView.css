@@ -1,0 +1,128 @@
+#arenaView {
+  /* background-color: aqua; */
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+#topBar {
+  /* background-color: yellow; */
+
+  display: grid;
+  grid-template-columns: auto auto;
+  place-content: center;
+  gap: 1rem;
+}
+
+#arena {
+  /* background-color: green; */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+#arena > div {
+  display: grid;
+}
+
+#player {
+  grid-template-columns: auto 1fr;
+
+  /* background-color: aqua; */
+}
+
+#player .controls {
+  display: grid;
+  grid-template-columns: auto auto;
+  place-content: center;
+  gap: 1rem;
+}
+
+#computer {
+  grid-template-columns: 1fr auto;
+
+  /* background-color: red; */
+}
+
+#arena .statusContainer {
+  display: grid;
+  gap: 0.75rem;
+}
+
+#arena #player .statusContainer {
+  justify-items: start;
+}
+
+#arena #computer .statusContainer {
+  justify-items: end;
+}
+
+#arena .statusContainer > * {
+  display: block;
+  --unit: 1rem;
+  height: var(--unit);
+  width: calc(var(--unit) * var(--size));
+  background-color: var(--status);
+}
+
+#arena > div > div {
+  align-content: center;
+}
+#arena > div > div:not(.statusContainer) {
+  display: grid;
+  /* grid-template-rows: auto 1fr auto; */
+}
+
+#arena div:not(.statusContainer) .name {
+  text-align: center;
+  user-select: none;
+}
+
+#arena div:not(.statusContainer) .board {
+}
+
+#bottomBar {
+  /* background-color: red; */
+  display: grid;
+  place-content: center;
+}
+
+#arenaView button {
+  --col: black;
+  color: var(--col);
+  font-size: 1.5rem;
+  background-color: transparent;
+  border: none;
+  padding: 0.3rem 1rem;
+  border: 0.15rem solid transparent;
+  border-radius: 0.3rem;
+  transition: 100ms;
+}
+
+#arenaView button:hover {
+  border-color: var(--col);
+}
+
+#arenaView button:active {
+  color: rgb(70, 64, 64);
+  background-color: rgb(214, 176, 52);
+}
+
+[data-size="4"] {
+  --size: 4;
+}
+[data-size="3"] {
+  --size: 3;
+}
+[data-size="2"] {
+  --size: 2;
+}
+[data-size="1"] {
+  --size: 1;
+}
+[data-status="grey"] {
+  --status: grey;
+}
+[data-status="red"] {
+  --status: red;
+}

@@ -9,8 +9,13 @@ html,
 body {
   height: 100vh;
   width: 100vw;
+  display: grid;
 }
 
 .disappear {
   display: none !important;
+}
+
+.hide {
+  opacity: 0% !important;
 }
