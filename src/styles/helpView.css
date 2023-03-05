@@ -1,0 +1,14 @@
+#helpView {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  padding: 10vh 10vw;
+  overflow: auto;
+}
+
+#helpContent {
+  background-color: white;
+  border: 0.15rem solid black;
+  border-radius: 1rem;
+  padding: 2rem;
+}
