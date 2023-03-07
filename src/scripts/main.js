@@ -111,18 +111,32 @@ const Data = (() => {
       ships[ship - 1].cells = shipCells;
     }
     function getAdjacentCell(cell, dir) {
+      let type = "Array";
+      if (typeof cell === "string") {
+        cell = JSON.parse(`[${cell}]`);
+        type = "String";
+      }
+      let result;
       switch (dir) {
         case "up":
-          return [cell[0] + 1, cell[1]];
+          result = [cell[0] + 1, cell[1]];
+          break;
         case "down":
-          return [cell[0] - 1, cell[1]];
+          result = [cell[0] - 1, cell[1]];
+          break;
         case "right":
-          return [cell[0], cell[1] + 1];
+          result = [cell[0], cell[1] + 1];
+          break;
         case "left":
-          return [cell[0], cell[1] - 1];
+          result = [cell[0], cell[1] - 1];
+          break;
         default:
           throw Error(`Invalid value for parameter dir (direction): ${dir}`);
       }
+      if (type === "String") {
+        return result.join(",");
+      }
+      return result;
     }
     function placeAtRandom() {
       initiate();
@@ -282,6 +296,7 @@ const Data = (() => {
 
 const UI = (() => {
   const elem = {
+    root: document.querySelector(":root"),
     board: {
       player: document.querySelector("#arenaView #player .board"),
       computer: document.querySelector("#arenaView #computer .board"),
@@ -312,23 +327,143 @@ const UI = (() => {
         document.querySelector("#arena #computer .status[data-size='4']"),
       ],
     },
+    getCell: (boardName, loc) =>
+      // loc -> "x,y"
+      elem.board[boardName].querySelector(`.cell[data-loc="${loc}"]`),
   };
 
   let selectedShip = null;
+  let selectedShipOrientation = "horizontal";
+  const heldCells = [];
 
   function generateBoard(boardElem, boardData) {
     Object.keys(boardData.cells).forEach((cell) => {
       const element = document.createElement("div");
       element.classList.add("cell");
       element.setAttribute("data-loc", cell);
+      element.setAttribute("data-status", "");
       boardElem.appendChild(element);
     });
+  }
+
+  function addCellEvents(cellElem) {
+    function holdShip(boardName, loc) {
+      function checkLoc(coord) {
+        coord = JSON.parse(`[${coord}]`);
+        let result = true;
+        coord.forEach((num) => {
+          if (num > 9 || num < 0) {
+            result = false;
+          }
+        });
+        return result;
+      }
+      const directions =
+        selectedShipOrientation === "horizontal"
+          ? ["left", "right"]
+          : ["up", "down"];
+      let length = selectedShip - 1;
+
+      for (let i = heldCells.length; i > 0; i--) {
+        const cell = heldCells.pop();
+        if (cell[0].getAttribute("data-status") === "hold") {
+          cell[0].setAttribute("data-status", cell[1]);
+        }
+      }
+
+      let currentCell = elem.getCell(boardName, loc);
+      heldCells.push([currentCell, currentCell.getAttribute("data-status")]);
+      currentCell.setAttribute("data-status", "hold");
+
+      const tempLocs = [loc, loc];
+
+      while (length > 0) {
+        if (tempLocs[0] !== null) {
+          tempLocs[0] = Data[
+            boardName === "player" ? "Player" : "AI"
+          ].board.getAdjacentCell(tempLocs[0], directions[0]);
+        }
+        if (checkLoc(tempLocs[0]) === false) {
+          tempLocs[0] = null;
+        }
+        if (tempLocs[0] !== null) {
+          currentCell = elem.getCell(boardName, tempLocs[0]);
+          heldCells.unshift([
+            currentCell,
+            currentCell.getAttribute("data-status"),
+          ]);
+          currentCell.setAttribute("data-status", "hold");
+          length -= 1;
+        }
+        if (length > 0) {
+          if (tempLocs[1] !== null) {
+            tempLocs[1] = Data[
+              boardName === "player" ? "Player" : "AI"
+            ].board.getAdjacentCell(tempLocs[1], directions[1]);
+          }
+          if (checkLoc(tempLocs[1]) === false) {
+            tempLocs[1] = null;
+          }
+          if (tempLocs[1] !== null) {
+            currentCell = elem.getCell(boardName, tempLocs[1]);
+            heldCells.push([
+              currentCell,
+              currentCell.getAttribute("data-status"),
+            ]);
+            currentCell.setAttribute("data-status", "hold");
+            length -= 1;
+          }
+        }
+      }
+    }
+    cellElem.addEventListener("mouseover", () => {
+      if (stage === "Setup" && selectedShip !== null) {
+        holdShip(
+          elem.board.player.contains(cellElem) ? "player" : "computer",
+          cellElem.getAttribute("data-loc")
+        );
+      }
+    });
+    // eslint-disable-next-line consistent-return
+    cellElem.addEventListener("contextmenu", (event) => {
+      if (stage === "Setup" && selectedShip !== null) {
+        event.preventDefault();
+        selectedShipOrientation =
+          selectedShipOrientation === "horizontal" ? "vertical" : "horizontal";
+        holdShip(
+          elem.board.player.contains(cellElem) ? "player" : "computer",
+          cellElem.getAttribute("data-loc")
+        );
+        return false;
+      }
+    });
+  }
+
+  function updateStage() {
+    elem.root.setAttribute("data-stage", stage);
   }
 
   function initialise() {
     generateBoard(elem.board.player, Data.Player.board);
     generateBoard(elem.board.computer, Data.AI.board);
 
+    elem.board.player.addEventListener("mouseleave", () => {
+      if (heldCells.length > 0) {
+        for (let i = heldCells.length; i > 0; i--) {
+          const cell = heldCells.pop();
+          if (cell[0].getAttribute("data-status") === "hold") {
+            cell[0].setAttribute("data-status", cell[1]);
+          }
+        }
+      }
+    });
+    elem.board.player.querySelectorAll(".cell").forEach((cellElem) => {
+      cellElem.setAttribute("data-status", "water");
+      addCellEvents(cellElem);
+    });
+    elem.board.computer.querySelectorAll(".cell").forEach((cellElem) => {
+      cellElem.setAttribute("data-status", "mist");
+    });
     elem.btn.help.addEventListener("click", () => {
       elem.view.help.classList.remove("disappear");
     });
@@ -356,9 +491,11 @@ const UI = (() => {
         }
       });
     });
+
+    elem.shipStatus.player[3].dispatchEvent(new Event("click"));
   }
 
-  return { elem, initialise };
+  return { elem, initialise, updateStage };
 })();
 
 const Engine = (() => {
@@ -373,9 +510,14 @@ const Engine = (() => {
     return { play };
   })();
 
+  function updateStage(value) {
+    stage = value;
+    UI.updateStage();
+  }
+
   function initialise() {
+    updateStage("Setup");
     UI.initialise();
-    stage = "Setup";
   }
 
   return {

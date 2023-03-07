@@ -32,9 +32,6 @@
   grid-template-columns: auto auto;
 }
 
-#player {
-  /* background-color: aqua; */
-}
 #player > div:not(.statusContainer) {
   justify-self: end;
 }
@@ -48,10 +45,6 @@
 
 .controls button {
   font-size: 1rem;
-}
-
-#computer {
-  /* background-color: red; */
 }
 
 #arena .statusContainer {
@@ -107,7 +100,12 @@
   background-color: var(--status);
 }
 
-#arena div:not(.statusContainer) .board > .cell:hover {
+[data-stage="Battle"]
+  #arena
+  #player
+  div:not(.statusContainer)
+  .board
+  > .cell:hover {
   outline: 0.15rem solid rgb(53, 41, 124);
 }
 
@@ -142,6 +140,10 @@
 }
 .status[data-status="red"] {
   --status: red;
+}
+
+.cell[data-status="hold"] {
+  --status: white;
 }
 
 .cell[data-status="mist"] {
