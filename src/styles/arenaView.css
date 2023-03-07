@@ -121,6 +121,10 @@
   font-size: 1.75rem;
 }
 
+.status.selected {
+  outline: 0.2rem solid rgb(0, 110, 255);
+}
+
 .status[data-size="4"] {
   --size: 4;
 }

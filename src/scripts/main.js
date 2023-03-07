@@ -5,7 +5,7 @@ import helpViewStyles from "./../styles/helpView.css";
 import endViewStyles from "./../styles/endView.css";
 /* eslint-enable no-unused-vars */
 
-let stage = null;
+let stage = null; // null || "Setup" || "Battle" || "End"
 
 const Data = (() => {
   function Ship(length) {
@@ -298,7 +298,23 @@ const UI = (() => {
       help: document.querySelector("#helpView"),
       end: document.querySelector("#endView"),
     },
+    shipStatus: {
+      player: [
+        document.querySelector("#arena #player .status[data-size='1']"),
+        document.querySelector("#arena #player .status[data-size='2']"),
+        document.querySelector("#arena #player .status[data-size='3']"),
+        document.querySelector("#arena #player .status[data-size='4']"),
+      ],
+      computer: [
+        document.querySelector("#arena #computer .status[data-size='1']"),
+        document.querySelector("#arena #computer .status[data-size='2']"),
+        document.querySelector("#arena #computer .status[data-size='3']"),
+        document.querySelector("#arena #computer .status[data-size='4']"),
+      ],
+    },
   };
+
+  let selectedShip = null;
 
   function generateBoard(boardElem, boardData) {
     Object.keys(boardData.cells).forEach((cell) => {
@@ -325,6 +341,20 @@ const UI = (() => {
       if (event.target === event.currentTarget) {
         elem.view.end.classList.add("disappear");
       }
+    });
+    elem.shipStatus.player.forEach((ship, index) => {
+      ship.addEventListener("click", () => {
+        if (stage === "Setup") {
+          elem.shipStatus.player.forEach((status) => {
+            if (status === ship) {
+              status.classList.add("selected");
+            } else {
+              status.classList.remove("selected");
+            }
+          });
+          selectedShip = index + 1;
+        }
+      });
     });
   }
 
