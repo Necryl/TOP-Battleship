@@ -5,6 +5,8 @@ import helpViewStyles from "./../styles/helpView.css";
 import endViewStyles from "./../styles/endView.css";
 /* eslint-enable no-unused-vars */
 
+let stage = null;
+
 const Data = (() => {
   function Ship(length) {
     if (!(length < 5 && length > 0)) {
@@ -284,6 +286,18 @@ const UI = (() => {
       player: document.querySelector("#arenaView #player .board"),
       computer: document.querySelector("#arenaView #computer .board"),
     },
+    btn: {
+      help: document.querySelector("#helpBtn"),
+      newGame: document.querySelector("#newGameBtn"),
+      randomize: document.querySelector("#randomizeBtn"),
+      reset: document.querySelector("#resetBtn"),
+      start: document.querySelector("#startBtn"),
+    },
+    view: {
+      arena: document.querySelector("#arenaView"),
+      help: document.querySelector("#helpView"),
+      end: document.querySelector("#endView"),
+    },
   };
 
   function generateBoard(boardElem, boardData) {
@@ -298,6 +312,20 @@ const UI = (() => {
   function initialise() {
     generateBoard(elem.board.player, Data.Player.board);
     generateBoard(elem.board.computer, Data.AI.board);
+
+    elem.btn.help.addEventListener("click", () => {
+      elem.view.help.classList.remove("disappear");
+    });
+    elem.view.help.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) {
+        elem.view.help.classList.add("disappear");
+      }
+    });
+    elem.view.end.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget) {
+        elem.view.end.classList.add("disappear");
+      }
+    });
   }
 
   return { elem, initialise };
@@ -317,6 +345,7 @@ const Engine = (() => {
 
   function initialise() {
     UI.initialise();
+    stage = "Setup";
   }
 
   return {
