@@ -42,6 +42,10 @@ const UI = (() => {
         document.querySelector("#arena #computer .status[data-size='4']"),
       ],
     },
+    name: {
+      player: document.querySelector("#arena #player .name"),
+      computer: document.querySelector("#arena #computer .name"),
+    },
     getCell: (boardName, loc) =>
       // loc -> "x,y"
       elem.board[boardName].querySelector(`.cell[data-loc="${loc}"]`),
@@ -266,6 +270,16 @@ const UI = (() => {
     }
   }
 
+  function updateTurn(playerName) {
+    Object.entries(elem.name).forEach((entry) => {
+      if (entry[0] === playerName) {
+        entry[1].classList.add("playing");
+      } else {
+        entry[1].classList.remove("playing");
+      }
+    });
+  }
+
   function initialise() {
     generateBoard(elem.board.player, Data.Player.board);
     generateBoard(elem.board.computer, Data.AI.board);
@@ -342,6 +356,7 @@ const UI = (() => {
     refreshCells,
     refreshBoard,
     selectedShipNum,
+    updateTurn,
   };
 })();
 
@@ -392,6 +407,7 @@ const Engine = (() => {
   })();
 
   const Game = (() => {
+    let turn = "Player";
     function start() {
       const ready = Data.Player.board.ships.reduce((final, current) => {
         if (current.cells.length === 0) {
@@ -401,12 +417,20 @@ const Engine = (() => {
       }, true);
       if (stage === "Setup" && ready) {
         updateStage("Battle");
+        turn = "Player";
+        UI.updateTurn("player");
       }
     }
+
+    function updateTurn() {
+      turn = turn === "Player" ? "AI" : "Player";
+      UI.updateTurn(turn === "Player" ? "player" : "computer");
+    }
+
     function newGame() {
       console.log("new Gaming");
     }
-    return { start, newGame };
+    return { start, newGame, updateTurn };
   })();
 
   function updateStage(value) {
