@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-unused-vars */
 import mainStyles from "./../styles/main.css";
 import arenaViewStyles from "./../styles/arenaView.css";
@@ -437,10 +438,94 @@ const UI = (() => {
         return false;
       }
     });
+    cellElem.addEventListener("click", () => {
+      if (stage === "Setup" && selectedShip !== null) {
+        const shipCellLocs = heldCells.reduce((final, current) => {
+          final.push(JSON.parse(`[${current[0].getAttribute("data-loc")}]`));
+          return final;
+        }, []);
+        const oldCells =
+          Data.Player.board.ships[selectedShip - 1].cells.slice(0);
+        const placed = Engine.Player.place(selectedShip, shipCellLocs);
+        if (placed) {
+          refreshCells("player", ...oldCells);
+        }
+      }
+    });
+  }
+
+  function refreshCells(boardName, ...cellLocs) {
+    cellLocs.forEach((loc) => {
+      if (typeof loc === "string") {
+        loc = JSON.parse(`[${loc}]`);
+      }
+      const boardData = Data[boardName === "player" ? "Player" : "AI"].board;
+      const cell = boardData.cells[loc];
+      let status;
+      if (boardName === "player") {
+        switch (stage) {
+          case "Setup":
+            status = "water";
+            break;
+          case "Battle" || "End":
+            status = "mist";
+            break;
+          default:
+            throw Error(`Unexpected stage value: ${stage}`);
+        }
+      } else {
+        status = "mist";
+      }
+      if (cell.ship !== null) {
+        if (boardData.ships[cell.ship - 1].isSunk()) {
+          status = "sunk";
+        } else if (cell.shot) {
+          status = "hit";
+        } else {
+          status = "ship";
+        }
+      } else if (cell.shot) {
+        status = "water";
+      }
+      elem
+        .getCell(boardName, loc.join(","))
+        .setAttribute("data-status", status);
+    });
+  }
+
+  function refreshBoard(boardName) {
+    const cells = Object.values(
+      Data[boardName === "player" ? "Player" : "AI"].board.cells
+    ).reduce((final, current) => {
+      final.push(current.loc);
+      return final;
+    }, []);
+    refreshCells(boardName, ...cells);
   }
 
   function updateStage() {
     elem.root.setAttribute("data-stage", stage);
+  }
+
+  function selectShip(shipNum) {
+    const index = shipNum - 1;
+    const ship = elem.shipStatus.player[index];
+    elem.shipStatus.player.forEach((status) => {
+      if (status === ship) {
+        if (status.classList.contains("selected") === false) {
+          status.classList.add("selected");
+          selectedShip = shipNum;
+        } else {
+          status.classList.remove("selected");
+          selectedShip = null;
+        }
+      } else {
+        status.classList.remove("selected");
+      }
+    });
+  }
+  function selectedShipNum() {
+    return selectedShip;
   }
 
   function initialise() {
@@ -480,22 +565,33 @@ const UI = (() => {
     elem.shipStatus.player.forEach((ship, index) => {
       ship.addEventListener("click", () => {
         if (stage === "Setup") {
-          elem.shipStatus.player.forEach((status) => {
-            if (status === ship) {
-              status.classList.add("selected");
-            } else {
-              status.classList.remove("selected");
-            }
-          });
-          selectedShip = index + 1;
+          selectShip(index + 1);
         }
       });
+    });
+    elem.btn.reset.addEventListener("click", () => {
+      if (stage === "Setup") {
+        Engine.Player.resetBoard();
+      }
+    });
+    elem.btn.randomize.addEventListener("click", () => {
+      if (stage === "Setup") {
+        Engine.Player.randomize();
+      }
     });
 
     elem.shipStatus.player[3].dispatchEvent(new Event("click"));
   }
 
-  return { elem, initialise, updateStage };
+  return {
+    elem,
+    initialise,
+    updateStage,
+    selectShip,
+    refreshCells,
+    refreshBoard,
+    selectedShipNum,
+  };
 })();
 
 const Engine = (() => {
@@ -507,7 +603,41 @@ const Engine = (() => {
 
   const Player = (() => {
     function play() {}
-    return { play };
+    function place(shipNum, shipCellLocs) {
+      const empty = shipCellLocs.reduce((final, current) => {
+        if (Data.Player.board.cells[current].ship !== null) {
+          final = false;
+        }
+        return final;
+      }, true);
+      if (empty) {
+        Data.Player.board.place(shipNum, ...shipCellLocs);
+        UI.refreshCells("player", ...shipCellLocs);
+        const nextShip = Data.Player.board.ships.reduce((final, current) => {
+          if (current.cells.length === 0) {
+            final = current.length;
+          }
+          return final;
+        }, shipNum);
+        UI.selectShip(nextShip);
+        return true;
+      }
+      return false;
+    }
+    function resetBoard() {
+      Data.Player.board.initiate();
+      UI.refreshBoard("player");
+      UI.selectShip(4);
+    }
+    function randomize() {
+      Data.Player.board.placeAtRandom();
+      UI.refreshBoard("player");
+      if (UI.selectedShipNum !== null) {
+        UI.selectShip(UI.selectedShipNum());
+      }
+    }
+
+    return { play, place, resetBoard, randomize };
   })();
 
   function updateStage(value) {

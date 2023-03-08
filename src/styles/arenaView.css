@@ -152,6 +152,9 @@
 .cell[data-status="water"] {
   --status: rgb(20, 95, 145);
 }
+.cell[data-status="ship"] {
+  --status: rgb(96, 100, 102);
+}
 .cell[data-status="hit"] {
   --status: rgb(37, 34, 39);
 }
