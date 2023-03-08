@@ -293,6 +293,12 @@ const UI = (() => {
         Engine.Player.randomize();
       }
     });
+    elem.btn.newGame.addEventListener("click", () => {
+      Engine.Game.newGame();
+    });
+    elem.btn.start.addEventListener("click", () => {
+      Engine.Game.start();
+    });
 
     elem.shipStatus.player[3].dispatchEvent(new Event("click"));
   }
@@ -354,6 +360,22 @@ const Engine = (() => {
     return { play, place, resetBoard, randomize };
   })();
 
+  const Game = (() => {
+    function start() {
+      const ready = Data.Player.board.ships.reduce((final, current) => {
+        if (current.cells.length === 0) {
+          final = false;
+        }
+        return final;
+      }, true);
+      if (stage === "Setup" && ready) {
+        updateStage("Battle");
+      }
+    }
+    function newGame() {}
+    return { start, newGame };
+  })();
+
   function updateStage(value) {
     stage = value;
     UI.updateStage();
@@ -367,6 +389,7 @@ const Engine = (() => {
   return {
     AI,
     Player,
+    Game,
     initialise,
   };
 })();
