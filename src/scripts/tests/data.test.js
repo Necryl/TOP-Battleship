@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-import { Data } from "../main";
+import { Data } from "../data";
 
 describe("Ship factory", (Ship = Data.Ship) => {
   const ship4 = Ship(4);
