@@ -493,8 +493,10 @@ const Engine = (() => {
           newExposed.cells.push(loc);
         }
       }
-      UI.refreshBoard("player");
-      Engine.Game.updateTurn();
+      setTimeout(() => {
+        UI.refreshBoard("player");
+        Engine.Game.updateTurn();
+      }, 1500);
       // console.groupEnd("AI out");
     }
     function resetBoard() {
