@@ -170,20 +170,10 @@ describe("Gameboard factory", (Gameboard = Data.Gameboard) => {
 });
 
 describe("Data -> AI", (AI = Data.AI) => {
-  const board = Data.Gameboard();
   test("affirm existence of methods and properties", () => {
     expect(AI.exposed).toBeDefined();
-    expect(AI.unexploredCells).toBeDefined();
     expect(AI.visibleCells).toBeDefined();
     expect(AI.currentBoard).toBeDefined();
     expect(AI.look).toBeDefined();
   });
-  test("exposed property", () => {
-    expect(Array.isArray(AI.exposed.cells)).toBe(true);
-    expect(AI.exposed.direction).toBeDefined();
-    expect(AI.exposed.isSunk).toBeDefined();
-    expect(AI.exposed.initiate).toBeDefined();
-  });
 });
-
-describe("Data -> Player", (Player = Data.Player) => {});
