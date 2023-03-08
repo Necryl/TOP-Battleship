@@ -98,15 +98,27 @@
   padding-bottom: 100%;
   border: 0.1rem solid rgba(128, 128, 128, 0.342);
   background-color: var(--status);
+  position: relative;
 }
 
-[data-stage="Battle"]
-  #arena
-  #player
-  div:not(.statusContainer)
-  .board
-  > .cell:hover {
-  outline: 0.15rem solid rgb(53, 41, 124);
+[data-stage="Setup"] #arena #player .cell {
+  touch-action: none;
+}
+
+[data-stage="Battle"] #arena #computer .board .cell:hover::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0%;
+  left: 0%;
+  height: 100%;
+  width: 100%;
+  outline: 0.15rem solid rgb(255, 255, 255);
+  pointer-events: none;
+}
+
+[data-stage="Battle"] :is(.controls, #startBtn) {
+  display: none !important;
 }
 
 #bottomBar {
@@ -135,10 +147,10 @@
 .status[data-size="1"] {
   --size: 1;
 }
-.status[data-status="grey"] {
+.status[data-status="intact"] {
   --status: grey;
 }
-.status[data-status="red"] {
+.status[data-status="sunk"] {
   --status: red;
 }
 

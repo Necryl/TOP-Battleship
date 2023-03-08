@@ -61,76 +61,89 @@ const UI = (() => {
     });
   }
 
-  function addCellEvents(cellElem) {
-    function holdShip(boardName, loc) {
-      function checkLoc(coord) {
-        coord = JSON.parse(`[${coord}]`);
-        let result = true;
-        coord.forEach((num) => {
-          if (num > 9 || num < 0) {
-            result = false;
-          }
-        });
-        return result;
-      }
-      const directions =
-        selectedShipOrientation === "horizontal"
-          ? ["left", "right"]
-          : ["up", "down"];
-      let length = selectedShip - 1;
-
-      for (let i = heldCells.length; i > 0; i--) {
-        const cell = heldCells.pop();
-        if (cell[0].getAttribute("data-status") === "hold") {
-          cell[0].setAttribute("data-status", cell[1]);
+  function holdShip(boardName, loc) {
+    function checkLoc(coord) {
+      coord = JSON.parse(`[${coord}]`);
+      let result = true;
+      coord.forEach((num) => {
+        if (num > 9 || num < 0) {
+          result = false;
         }
+      });
+      return result;
+    }
+    const directions =
+      selectedShipOrientation === "horizontal"
+        ? ["left", "right"]
+        : ["up", "down"];
+    let length = selectedShip - 1;
+
+    for (let i = heldCells.length; i > 0; i--) {
+      const cell = heldCells.pop();
+      if (cell[0].getAttribute("data-status") === "hold") {
+        cell[0].setAttribute("data-status", cell[1]);
       }
+    }
 
-      let currentCell = elem.getCell(boardName, loc);
-      heldCells.push([currentCell, currentCell.getAttribute("data-status")]);
-      currentCell.setAttribute("data-status", "hold");
+    let currentCell = elem.getCell(boardName, loc);
+    heldCells.push([currentCell, currentCell.getAttribute("data-status")]);
+    currentCell.setAttribute("data-status", "hold");
 
-      const tempLocs = [loc, loc];
+    const tempLocs = [loc, loc];
 
-      while (length > 0) {
-        if (tempLocs[0] !== null) {
-          tempLocs[0] = Data[
+    while (length > 0) {
+      if (tempLocs[0] !== null) {
+        tempLocs[0] = Data[
+          boardName === "player" ? "Player" : "AI"
+        ].board.getAdjacentCell(tempLocs[0], directions[0]);
+      }
+      if (checkLoc(tempLocs[0]) === false) {
+        tempLocs[0] = null;
+      }
+      if (tempLocs[0] !== null) {
+        currentCell = elem.getCell(boardName, tempLocs[0]);
+        heldCells.unshift([
+          currentCell,
+          currentCell.getAttribute("data-status"),
+        ]);
+        currentCell.setAttribute("data-status", "hold");
+        length -= 1;
+      }
+      if (length > 0) {
+        if (tempLocs[1] !== null) {
+          tempLocs[1] = Data[
             boardName === "player" ? "Player" : "AI"
-          ].board.getAdjacentCell(tempLocs[0], directions[0]);
+          ].board.getAdjacentCell(tempLocs[1], directions[1]);
         }
-        if (checkLoc(tempLocs[0]) === false) {
-          tempLocs[0] = null;
+        if (checkLoc(tempLocs[1]) === false) {
+          tempLocs[1] = null;
         }
-        if (tempLocs[0] !== null) {
-          currentCell = elem.getCell(boardName, tempLocs[0]);
-          heldCells.unshift([
+        if (tempLocs[1] !== null) {
+          currentCell = elem.getCell(boardName, tempLocs[1]);
+          heldCells.push([
             currentCell,
             currentCell.getAttribute("data-status"),
           ]);
           currentCell.setAttribute("data-status", "hold");
           length -= 1;
         }
-        if (length > 0) {
-          if (tempLocs[1] !== null) {
-            tempLocs[1] = Data[
-              boardName === "player" ? "Player" : "AI"
-            ].board.getAdjacentCell(tempLocs[1], directions[1]);
-          }
-          if (checkLoc(tempLocs[1]) === false) {
-            tempLocs[1] = null;
-          }
-          if (tempLocs[1] !== null) {
-            currentCell = elem.getCell(boardName, tempLocs[1]);
-            heldCells.push([
-              currentCell,
-              currentCell.getAttribute("data-status"),
-            ]);
-            currentCell.setAttribute("data-status", "hold");
-            length -= 1;
-          }
-        }
       }
     }
+  }
+
+  function placeHeldCells() {
+    const shipCellLocs = heldCells.reduce((final, current) => {
+      final.push(JSON.parse(`[${current[0].getAttribute("data-loc")}]`));
+      return final;
+    }, []);
+    const oldCells = Data.Player.board.ships[selectedShip - 1].cells.slice(0);
+    const placed = Engine.Player.place(selectedShip, shipCellLocs);
+    if (placed) {
+      refreshCells("player", ...oldCells);
+    }
+  }
+
+  function addCellEvents(cellElem) {
     cellElem.addEventListener("mouseover", () => {
       if (stage === "Setup" && selectedShip !== null) {
         holdShip(
@@ -154,16 +167,7 @@ const UI = (() => {
     });
     cellElem.addEventListener("click", () => {
       if (stage === "Setup" && selectedShip !== null) {
-        const shipCellLocs = heldCells.reduce((final, current) => {
-          final.push(JSON.parse(`[${current[0].getAttribute("data-loc")}]`));
-          return final;
-        }, []);
-        const oldCells =
-          Data.Player.board.ships[selectedShip - 1].cells.slice(0);
-        const placed = Engine.Player.place(selectedShip, shipCellLocs);
-        if (placed) {
-          refreshCells("player", ...oldCells);
-        }
+        placeHeldCells();
       }
     });
   }
@@ -219,6 +223,11 @@ const UI = (() => {
 
   function updateStage() {
     elem.root.setAttribute("data-stage", stage);
+    refreshBoard("player");
+    refreshBoard("computer");
+    if (stage === "Setup") {
+      elem.shipStatus.player[3].dispatchEvent(new Event("click"));
+    }
   }
 
   function selectShip(shipNum) {
@@ -242,10 +251,35 @@ const UI = (() => {
     return selectedShip;
   }
 
+  let previousTouchedCell = null;
+  function touchHoldShip(touchObject) {
+    const cell = document.elementFromPoint(
+      touchObject.clientX,
+      touchObject.clientY
+    );
+    if (cell.classList.contains("cell") && previousTouchedCell !== cell) {
+      holdShip(
+        elem.board.player.contains(cell) ? "player" : "computer",
+        cell.getAttribute("data-loc")
+      );
+      previousTouchedCell = cell;
+    }
+  }
+
   function initialise() {
     generateBoard(elem.board.player, Data.Player.board);
     generateBoard(elem.board.computer, Data.AI.board);
 
+    document.body.addEventListener("touchmove", (event) => {
+      if (stage === "Setup" && selectedShip !== null) {
+        touchHoldShip(event.touches[0]);
+      }
+    });
+    document.body.addEventListener("touchend", () => {
+      if (stage === "Setup" && selectedShip !== null) {
+        placeHeldCells();
+      }
+    });
     elem.board.player.addEventListener("mouseleave", () => {
       if (heldCells.length > 0) {
         for (let i = heldCells.length; i > 0; i--) {
@@ -257,7 +291,6 @@ const UI = (() => {
       }
     });
     elem.board.player.querySelectorAll(".cell").forEach((cellElem) => {
-      cellElem.setAttribute("data-status", "water");
       addCellEvents(cellElem);
     });
     elem.board.computer.querySelectorAll(".cell").forEach((cellElem) => {
@@ -299,8 +332,6 @@ const UI = (() => {
     elem.btn.start.addEventListener("click", () => {
       Engine.Game.start();
     });
-
-    elem.shipStatus.player[3].dispatchEvent(new Event("click"));
   }
 
   return {
@@ -372,7 +403,9 @@ const Engine = (() => {
         updateStage("Battle");
       }
     }
-    function newGame() {}
+    function newGame() {
+      console.log("new Gaming");
+    }
     return { start, newGame };
   })();
 
@@ -382,8 +415,8 @@ const Engine = (() => {
   }
 
   function initialise() {
-    updateStage("Setup");
     UI.initialise();
+    updateStage("Setup");
   }
 
   return {
