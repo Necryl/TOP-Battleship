@@ -124,7 +124,13 @@ const Data = (() => {
         default:
           throw Error(`Invalid value for parameter dir (direction): ${dir}`);
       }
-      if (type === "String") {
+      result = result.reduce((final, current) => {
+        if (current > 9 || current < 0) {
+          final = false;
+        }
+        return final;
+      }, result); // validating new loc, returns the loc or false
+      if (type === "String" && Array.isArray(result)) {
         return result.join(",");
       }
       return result;
@@ -214,23 +220,34 @@ const Data = (() => {
   }
 
   const AI = (() => {
-    const realBoard = [];
-    const unexploredCells = [];
     const visibleCells = [];
     const board = Gameboard(10);
-    function currentBoard() {}
+    function currentBoard() {
+      return Data.Player.board;
+    }
     function look(cell) {
       if (visibleCells.includes(JSON.stringify(cell))) {
-        return currentBoard()[cell];
+        return currentBoard().cells[cell];
       }
       return false;
     }
+    const exposedShips = [];
 
-    const exposed = (() => {
+    const exposed = (ship) => {
       const cells = []; // has to be sorted (up to down) or (left to right)
       const dir = [null];
-      function direction() {
-        return dir[0];
+
+      // eslint-disable-next-line consistent-return
+      function direction(text) {
+        if (typeof text === "undefined") {
+          return dir[0];
+        }
+        // eslint-disable-next-line no-nested-ternary
+        dir[0] = ["up", "down", "vertical"].includes(text)
+          ? "vertical"
+          : ["left", "right", "horizontal"].includes(text)
+          ? "horizontal"
+          : null;
       }
       function isSunk() {
         if (direction() === null) {
@@ -250,28 +267,28 @@ const Data = (() => {
         }
         return true;
       }
-      function initiate(exposedCells = []) {
-        cells.splice(0, Infinity);
-        exposedCells.forEach((cell) => {
-          cells.push(cell);
-        });
 
-        dir[0] = null;
-      }
       return {
         cells,
         direction,
         isSunk,
-        initiate,
+        ship,
       };
-    })();
+    };
+
+    function reset() {
+      visibleCells.splice(0, Infinity);
+      exposedShips.splice(0, Infinity);
+      board.initiate();
+    }
 
     return {
       board,
       currentBoard,
       look,
+      reset,
       exposed,
-      unexploredCells,
+      exposedShips,
       visibleCells,
     };
   })();

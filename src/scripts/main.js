@@ -46,6 +46,8 @@ const UI = (() => {
       player: document.querySelector("#arena #player .name"),
       computer: document.querySelector("#arena #computer .name"),
     },
+    topBar: document.querySelector("#arenaView #topBar"),
+    endMsg: document.querySelector("#endView #endMsg"),
     getCell: (boardName, loc) =>
       // loc -> "x,y"
       elem.board[boardName].querySelector(`.cell[data-loc="${loc}"]`),
@@ -67,6 +69,9 @@ const UI = (() => {
 
   function holdShip(boardName, loc) {
     function checkLoc(coord) {
+      if (coord === false) {
+        return false;
+      }
       coord = JSON.parse(`[${coord}]`);
       let result = true;
       coord.forEach((num) => {
@@ -189,7 +194,10 @@ const UI = (() => {
           case "Setup":
             status = "water";
             break;
-          case "Battle" || "End":
+          case "Battle":
+            status = "mist";
+            break;
+          case "End":
             status = "mist";
             break;
           default:
@@ -203,7 +211,7 @@ const UI = (() => {
           status = "sunk";
         } else if (cell.shot) {
           status = "hit";
-        } else {
+        } else if (boardName === "player" || stage === "End") {
           status = "ship";
         }
       } else if (cell.shot) {
@@ -216,13 +224,25 @@ const UI = (() => {
   }
 
   function refreshBoard(boardName) {
-    const cells = Object.values(
-      Data[boardName === "player" ? "Player" : "AI"].board.cells
-    ).reduce((final, current) => {
+    const dataBoard = Data[boardName === "player" ? "Player" : "AI"].board;
+    const cells = Object.values(dataBoard.cells).reduce((final, current) => {
       final.push(current.loc);
       return final;
     }, []);
     refreshCells(boardName, ...cells);
+    dataBoard.ships.forEach((ship) => {
+      if (ship.isSunk()) {
+        elem.shipStatus[boardName][ship.length - 1].setAttribute(
+          "data-status",
+          "sunk"
+        );
+      } else {
+        elem.shipStatus[boardName][ship.length - 1].setAttribute(
+          "data-status",
+          "intact"
+        );
+      }
+    });
   }
 
   function updateStage() {
@@ -280,6 +300,12 @@ const UI = (() => {
     });
   }
 
+  function declare(verdict) {
+    const message = verdict ? "You win!" : "You lose!";
+    elem.endMsg.textContent = message;
+    elem.view.end.classList.remove("disappear");
+  }
+
   function initialise() {
     generateBoard(elem.board.player, Data.Player.board);
     generateBoard(elem.board.computer, Data.AI.board);
@@ -290,7 +316,11 @@ const UI = (() => {
       }
     });
     document.body.addEventListener("touchend", () => {
-      if (stage === "Setup" && selectedShip !== null) {
+      if (
+        stage === "Setup" &&
+        selectedShip !== null &&
+        heldCells.length !== 0
+      ) {
         placeHeldCells();
       }
     });
@@ -308,10 +338,15 @@ const UI = (() => {
       addCellEvents(cellElem);
     });
     elem.board.computer.querySelectorAll(".cell").forEach((cellElem) => {
-      cellElem.setAttribute("data-status", "mist");
+      cellElem.addEventListener("click", () => {
+        if (stage === "Battle" && Engine.Game.getTurn() === "Player") {
+          Engine.Player.play(cellElem);
+        }
+      });
     });
     elem.btn.help.addEventListener("click", () => {
       elem.view.help.classList.remove("disappear");
+      elem.topBar.classList.remove("open");
     });
     elem.view.help.addEventListener("click", (event) => {
       if (event.target === event.currentTarget) {
@@ -342,9 +377,13 @@ const UI = (() => {
     });
     elem.btn.newGame.addEventListener("click", () => {
       Engine.Game.newGame();
+      elem.topBar.classList.remove("open");
     });
     elem.btn.start.addEventListener("click", () => {
       Engine.Game.start();
+    });
+    elem.topBar.addEventListener("mouseover", () => {
+      elem.topBar.classList.add("open");
     });
   }
 
@@ -357,18 +396,124 @@ const UI = (() => {
     refreshBoard,
     selectedShipNum,
     updateTurn,
+    declare,
   };
 })();
 
 const Engine = (() => {
   const AI = (() => {
     const data = Data.AI;
-    function play() {}
-    return { play };
+    function randomLoc() {
+      return [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)];
+    }
+    function play() {
+      // console.groupCollapsed("AI's time to shine");
+      let loc;
+      let dir;
+      if (data.exposedShips.length === 0) {
+        let invalid = true;
+        while (invalid) {
+          loc = randomLoc();
+          if (data.look(loc) === false) {
+            invalid = false;
+          }
+        }
+      } else if (data.exposedShips[0].direction() === null) {
+        const dirs = ["up", "down", "left", "right"];
+        for (let i = 0; i < dirs.length; i++) {
+          const adjacent = Data.Player.board.getAdjacentCell(
+            data.exposedShips[0].cells[0],
+            dirs[i]
+          );
+          if (adjacent !== false && data.look(adjacent) === false) {
+            // console.log("look says:", data.look(adjacent));
+            loc = adjacent;
+            dir = dirs[i];
+            break;
+          }
+        }
+      } else {
+        // console.log("found direction:", data.exposedShips[0].direction());
+        const directions =
+          data.exposedShips[0].direction() === "vertical"
+            ? ["up", "down"]
+            : ["left", "right"];
+        const cellHead = data
+          .currentBoard()
+          .getAdjacentCell(data.exposedShips[0].cells[0], directions[0]);
+
+        // console.log("cellHead:", cellHead);
+        if (cellHead !== false && data.look(cellHead) === false) {
+          loc = cellHead;
+          // eslint-disable-next-line prefer-destructuring
+          dir = directions[0];
+          // console.log("going with cellHead");
+        } else {
+          // console.log("going with cellEnd");
+          const cellEnd = data
+            .currentBoard()
+            .getAdjacentCell(
+              data.exposedShips[0].cells[data.exposedShips[0].cells.length - 1],
+              directions[1]
+            );
+          loc = cellEnd;
+          // eslint-disable-next-line prefer-destructuring
+          dir = directions[1];
+        }
+      }
+      data.visibleCells.push(JSON.stringify(loc));
+      // console.log("Gonna try:", loc);
+      const hit = Data.Player.board.receiveAttack(loc);
+      if (hit) {
+        let newShip = true;
+        const shipNum = Data.Player.board.cells[loc].ship;
+        const sunk = Data.Player.board.ships[shipNum - 1].isSunk();
+        if (data.exposedShips.length !== 0) {
+          data.exposedShips.forEach((exposedShip, index) => {
+            if (shipNum === exposedShip.ship) {
+              newShip = false;
+              if (sunk === false) {
+                if (["up", "left"].includes(dir)) {
+                  exposedShip.cells.unshift(loc);
+                } else {
+                  exposedShip.cells.push(loc);
+                }
+                if (exposedShip.direction() === null) {
+                  exposedShip.direction(dir);
+                }
+              } else {
+                data.exposedShips.splice(index, 1);
+              }
+            }
+          });
+        }
+        if (newShip && sunk === false) {
+          const newExposed = data.exposed(Data.Player.board.cells[loc].ship);
+          data.exposedShips.push(newExposed);
+          newExposed.cells.push(loc);
+        }
+      }
+      UI.refreshBoard("player");
+      Engine.Game.updateTurn();
+      // console.groupEnd("AI out");
+    }
+    function resetBoard() {
+      Data.AI.reset();
+      UI.refreshBoard("computer");
+    }
+
+    return { play, randomLoc, resetBoard };
   })();
 
   const Player = (() => {
-    function play() {}
+    function play(cellElem) {
+      const loc = JSON.parse(`[${cellElem.getAttribute("data-loc")}]`);
+      if (Data.AI.board.cells[loc].shot === false) {
+        Data.AI.board.receiveAttack(loc);
+        UI.refreshBoard("computer");
+        Game.updateTurn();
+      }
+    }
     function place(shipNum, shipCellLocs) {
       const empty = shipCellLocs.reduce((final, current) => {
         if (Data.Player.board.cells[current].ship !== null) {
@@ -407,7 +552,7 @@ const Engine = (() => {
   })();
 
   const Game = (() => {
-    let turn = "Player";
+    let turn = null;
     function start() {
       const ready = Data.Player.board.ships.reduce((final, current) => {
         if (current.cells.length === 0) {
@@ -416,6 +561,7 @@ const Engine = (() => {
         return final;
       }, true);
       if (stage === "Setup" && ready) {
+        Data.AI.board.placeAtRandom();
         updateStage("Battle");
         turn = "Player";
         UI.updateTurn("player");
@@ -424,13 +570,44 @@ const Engine = (() => {
 
     function updateTurn() {
       turn = turn === "Player" ? "AI" : "Player";
-      UI.updateTurn(turn === "Player" ? "player" : "computer");
+      if (Data[turn].board.defeated()) {
+        endGame();
+      } else {
+        UI.updateTurn(turn === "Player" ? "player" : "computer");
+        if (turn === "AI") {
+          AI.play();
+        }
+      }
+    }
+
+    function endGame() {
+      let won;
+      if (Data.AI.board.defeated()) {
+        won = true;
+      } else if (Data.Player.board.defeated()) {
+        won = false;
+      } else {
+        throw Error("Neither board is defeated but endGame was called");
+      }
+      updateStage("End");
+      UI.declare(won);
+    }
+
+    function getTurn() {
+      return turn;
+    }
+
+    function reset() {
+      turn = null;
     }
 
     function newGame() {
-      console.log("new Gaming");
+      AI.resetBoard();
+      Player.resetBoard();
+      reset();
+      updateStage("Setup");
     }
-    return { start, newGame, updateTurn };
+    return { start, newGame, updateTurn, getTurn, reset };
   })();
 
   function updateStage(value) {

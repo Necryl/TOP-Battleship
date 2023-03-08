@@ -83,7 +83,7 @@
   position: relative;
 }
 
-.name.playing::after {
+[data-stage="Battle"] .name.playing::after {
   content: "";
   position: absolute;
   animation: dot-dot-dot 3s infinite;
@@ -139,7 +139,7 @@
   pointer-events: none;
 }
 
-[data-stage="Battle"] :is(.controls, #startBtn) {
+:is([data-stage="Battle"], [data-stage="End"]) :is(.controls, #startBtn) {
   display: none !important;
 }
 
@@ -257,7 +257,7 @@
   #topBar:hover::before {
     content: "MENU v";
   }
-  #topBar:hover button {
+  #topBar.open button {
     scale: 100%;
   }
   #bottomBar {
