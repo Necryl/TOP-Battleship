@@ -281,7 +281,11 @@ const UI = (() => {
       touchObject.clientX,
       touchObject.clientY
     );
-    if (cell.classList.contains("cell") && previousTouchedCell !== cell) {
+    if (
+      cell.classList.contains("cell") &&
+      elem.board.player.contains(cell) &&
+      previousTouchedCell !== cell
+    ) {
       holdShip(
         elem.board.player.contains(cell) ? "player" : "computer",
         cell.getAttribute("data-loc")
