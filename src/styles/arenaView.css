@@ -127,7 +127,12 @@
   touch-action: none;
 }
 
-[data-stage="Battle"] #arena #computer .board .cell:hover::after {
+[data-stage="Battle"]
+  #arena
+  #computer
+  .name:not(.playing)
+  ~ .board
+  .cell:hover::after {
   content: "";
   position: absolute;
   z-index: 1;
